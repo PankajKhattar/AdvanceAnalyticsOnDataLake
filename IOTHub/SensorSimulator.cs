@@ -8,14 +8,14 @@ namespace simulated_device
 {
     class SensorSimulator
     {
-        private static DeviceClient s_deviceClient;
+        private static DeviceClient deviceClient;
 
         // The device connection string to authenticate the device with your IoT hub.
         // Using the Azure CLI:
         // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyDotnetDevice --output table
-        private readonly static string s_connectionString = "{Your device connection string here}";
+        private readonly static string connectionString = "{Your device connection string here}";
 
-        private static int s_telemetryInterval = 1; // Seconds
+        private static int telemetryInterval = 1; // Seconds
 
         // Handle the direct method call
         private static Task<MethodResponse> SetTelemetryInterval(MethodRequest methodRequest, object userContext)
@@ -23,7 +23,7 @@ namespace simulated_device
             var data = Encoding.UTF8.GetString(methodRequest.Data);
 
             // Check the payload is a single integer value
-            if (Int32.TryParse(data, out s_telemetryInterval))
+            if (Int32.TryParse(data, out telemetryInterval))
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Telemetry interval set to {0} seconds", data);
@@ -68,10 +68,10 @@ namespace simulated_device
                 message.Properties.Add("temperatureAlert", (currentTemperature > 30) ? "true" : "false");
 
                 // Send the telemetry message
-                await s_deviceClient.SendEventAsync(message);
+                await deviceClient.SendEventAsync(message);
                 Console.WriteLine("{0} > Sending message: {1}", DateTime.Now, messageString);
 
-                await Task.Delay(s_telemetryInterval * 1000);
+                await Task.Delay(telemetryInterval * 1000);
             }
         }
         private static void Main(string[] args)
@@ -79,10 +79,10 @@ namespace simulated_device
             Console.WriteLine("IoT Hub Quickstarts - Sensor Simulator. Ctrl-C to exit.\n");
 
             // Connect to the IoT hub using the MQTT protocol
-            s_deviceClient = DeviceClient.CreateFromConnectionString(s_connectionString, TransportType.Mqtt);
+            deviceClient = DeviceClient.CreateFromConnectionString(connectionString, TransportType.Mqtt);
 
             // Create a handler for the direct method call
-            s_deviceClient.SetMethodHandlerAsync("SetTelemetryInterval", SetTelemetryInterval, null).Wait();
+            deviceClient.SetMethodHandlerAsync("SetTelemetryInterval", SetTelemetryInterval, null).Wait();
             SendDeviceToCloudMessagesAsync();
             Console.ReadLine();
         }
